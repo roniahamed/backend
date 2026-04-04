@@ -5,6 +5,7 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.filters",
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -82,6 +84,8 @@ REST_FRAMEWORK = {
         "contact_submission": "10/hour",
     },
 }
+
+CORS_ALLOWED_ORIGINS = []
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Portfolio API",

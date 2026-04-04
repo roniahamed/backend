@@ -7,7 +7,7 @@ Use this monitor to keep free-tier backend instances warm by hitting a lightweig
 - URL path: `/health/`
 - Method: `GET`
 - Auth: none
-- Response body: `{"status": "ok"}`
+- Response body: `{"status":"ok","database":"connected"}`
 
 ## Better Stack Dashboard Setup (Recommended)
 
@@ -34,7 +34,7 @@ curl -sS https://<your-domain>/health/
 Expected:
 
 ```json
-{"status":"ok"}
+{"status":"ok","database":"connected"}
 ```
 
 ## Notes
