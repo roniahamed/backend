@@ -1,10 +1,11 @@
-from apps.blog.models import BlogPost, Tag
-from apps.portfolio.models import Project, ProjectImage, Service
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from apps.blog.models import BlogPost, Tag
+from apps.portfolio.models import Project, ProjectImage, Service
 
 
 def build_user(email: str = "owner@example.com"):

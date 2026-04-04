@@ -42,10 +42,10 @@ Production-grade, lightweight backend for the portfolio frontend.
 
 ## Local Commands
 
-Run from repository root:
+Run from backend repository root:
 
 - `uv sync`
-- `DJANGO_ENV=test uv run python backend/manage.py migrate`
-- `cd backend && DJANGO_ENV=test uv run pytest -q`
-- `cd backend && DJANGO_ENV=test uv run ruff check .`
-- `uv run sphinx-build docs docs/_build`
+- `DJANGO_ENV=test uv run python manage.py migrate`
+- `DJANGO_ENV=test uv run pytest -q`
+- `DJANGO_ENV=test uv run ruff check .`
+- `DJANGO_ENV=test uv run mypy .`
