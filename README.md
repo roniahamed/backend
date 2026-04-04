@@ -25,6 +25,7 @@ Production-grade, lightweight backend for the portfolio frontend.
 
 ## API v1
 
+- `GET /health/`
 - `GET /api/v1/health/`
 - `GET /api/v1/profile/`
 - `GET /api/v1/services/`
@@ -49,3 +50,7 @@ Run from backend repository root:
 - `DJANGO_ENV=test uv run pytest -q`
 - `DJANGO_ENV=test uv run ruff check .`
 - `DJANGO_ENV=test uv run mypy .`
+
+## Uptime Monitoring
+
+- Better Stack setup guide: `backend/docs/betterstack-monitoring.md`

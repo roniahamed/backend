@@ -23,9 +23,13 @@ def test_health_endpoint_returns_ok(db):
     client = APIClient()
 
     response = client.get("/api/v1/health/")
+    public_response = client.get("/health/")
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data["status"] == "ok"
+    assert response.data == {"status": "ok"}
+    assert public_response.status_code == status.HTTP_200_OK
+    assert public_response.data == {"status": "ok"}
 
 
 def test_public_profile_endpoint_returns_latest_public_profile(db):

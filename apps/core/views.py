@@ -3,7 +3,6 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import transaction
-from django.utils import timezone
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny
@@ -25,7 +24,7 @@ class HealthCheckView(APIView):
 	permission_classes = [AllowAny]
 
 	def get(self, request):
-		return Response({"status": "ok", "timestamp": timezone.now()})
+		return Response({"status": "ok"})
 
 
 class ContactSubmissionCreateView(generics.CreateAPIView):
