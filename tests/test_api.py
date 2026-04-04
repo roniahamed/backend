@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.blog.models import BlogPost, Tag
+from apps.core.models import Link
 from apps.portfolio.models import Project, ProjectImage, Service
 
 
@@ -73,6 +74,50 @@ def test_projects_endpoint_uses_slug_lookup_and_nested_images(db):
     assert list_response.data["results"][0]["slug"] == project.slug
     assert detail_response.status_code == status.HTTP_200_OK
     assert len(detail_response.data["images"]) == 1
+
+
+def test_links_endpoint_returns_active_links(db):
+    project = Project.objects.create(
+        slug="extrahanden-ai",
+        title="ExtraHanden AI",
+        subtitle="Assessment platform",
+        description="Project description",
+        abstract="Long abstract",
+        tech_stack=["Django REST Framework", "PostgreSQL"],
+        user_roles=["Admin"],
+        security={"authentication": "JWT"},
+        references={"migration": "python manage.py migrate"},
+        period="2025-2026",
+        category="Full Stack",
+        role="Backend",
+        quote="Scale-first architecture",
+        problem_statement="Heavy query workloads",
+        published_at=timezone.now(),
+    )
+
+    project.links.create(
+        name="GitHub",
+        url="https://github.com/roniahamed/extrahanden-ai",
+        icon="Github",
+        category="developer",
+        sort_order=1,
+        is_active=True,
+    )
+    project.links.create(
+        name="Old Link",
+        url="https://example.com/old",
+        icon="Link",
+        category="developer",
+        sort_order=2,
+        is_active=False,
+    )
+
+    client = APIClient()
+    response = client.get("/api/v1/links/?category=developer")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["results"][0]["name"] == "GitHub"
+    assert Link.objects.count() == 2
 
 
 def test_services_and_blog_endpoints_return_public_records(db):
@@ -147,9 +192,15 @@ def test_contact_submission_validates_message_and_jwt_token_works(db):
 
     assert invalid_response.status_code == status.HTTP_400_BAD_REQUEST
 
-    valid_payload = {**invalid_payload, "message": "I need a backend redesign with observability and docs."}
+    valid_payload = {
+        **invalid_payload,
+        "subject": "Platform redesign",
+        "service_interest": "",
+        "message": "I need a backend redesign with observability and docs.",
+    }
     valid_response = client.post("/api/v1/contact/", valid_payload, format="json")
     assert valid_response.status_code == status.HTTP_201_CREATED
+    assert valid_response.data["service_interest"] == "Platform redesign"
 
     token_response = client.post(
         reverse("token-obtain-pair"),

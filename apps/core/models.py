@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 
@@ -28,3 +30,42 @@ class ContactSubmission(models.Model):
 
 	def __str__(self) -> str:
 		return f"{self.name} <{self.email}>"
+
+
+class Link(models.Model):
+	CATEGORY_DEVELOPER = "developer"
+	CATEGORY_PROFESSIONAL = "professional"
+	CATEGORY_SOCIAL = "social"
+	CATEGORY_REFERENCE = "reference"
+
+	CATEGORY_CHOICES = (
+		(CATEGORY_DEVELOPER, "Developer"),
+		(CATEGORY_PROFESSIONAL, "Professional"),
+		(CATEGORY_SOCIAL, "Social"),
+		(CATEGORY_REFERENCE, "Reference"),
+	)
+
+	name = models.CharField(max_length=120)
+	url = models.URLField(max_length=500)
+	icon = models.CharField(max_length=60, blank=True)
+	category = models.CharField(max_length=24, choices=CATEGORY_CHOICES, default=CATEGORY_REFERENCE)
+	sort_order = models.PositiveIntegerField(default=0)
+	is_active = models.BooleanField(default=True)
+
+	# why: Generic relation keeps one link table reusable across domain models.
+	content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
+	object_id = models.PositiveBigIntegerField(null=True, blank=True)
+	content_object = GenericForeignKey("content_type", "object_id")
+
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		ordering = ("sort_order", "name")
+		indexes = [
+			models.Index(fields=("category", "is_active", "sort_order")),
+			models.Index(fields=("content_type", "object_id")),
+		]
+
+	def __str__(self) -> str:
+		return self.name

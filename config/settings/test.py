@@ -19,6 +19,10 @@ CACHES = {
     }
 }
 
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+DEFAULT_FROM_EMAIL = "test@example.com"
+CONTACT_RECEIVER_EMAIL = "receiver@example.com"
+
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]

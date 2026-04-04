@@ -1,10 +1,20 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
-from apps.core.models import ContactSubmission
+from apps.core.models import ContactSubmission, Link
 
 
 @admin.register(ContactSubmission)
-class ContactSubmissionAdmin(admin.ModelAdmin):
-	list_display = ("name", "email", "service_interest", "status", "created_at")
+class ContactSubmissionAdmin(ModelAdmin):
+	list_display = ("id", "name", "email", "service_interest", "status", "created_at")
 	list_filter = ("status", "created_at")
-	search_fields = ("name", "email", "company", "service_interest")
+	search_fields = ("id", "name", "email", "company", "service_interest", "message")
+	readonly_fields = ("created_at",)
+
+
+@admin.register(Link)
+class LinkAdmin(ModelAdmin):
+	list_display = ("id", "name", "category", "is_active", "sort_order", "content_type", "object_id")
+	list_filter = ("category", "is_active", "content_type")
+	search_fields = ("id", "name", "url", "icon")
+	ordering = ("category", "sort_order", "name")
