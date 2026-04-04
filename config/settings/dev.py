@@ -38,6 +38,15 @@ DATABASES = {
     "default": env.db("DATABASE_URL"),
 }
 
+CORS_ALLOWED_ORIGINS = [
+    item.strip()
+    for item in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if item.strip()
+]
+
 # why: Local memory cache keeps free-tier infra simple and fast.
 CACHES = {
     "default": {
@@ -65,6 +74,7 @@ EMAIL_USE_TLS = parse_bool(required_env("EMAIL_USE_TLS"), name="EMAIL_USE_TLS")
 EMAIL_HOST_USER = required_env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = required_env("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = required_env("DEFAULT_FROM_EMAIL")
+CONTACT_RECEIVER_EMAIL = required_env("CONTACT_RECEIVER_EMAIL")
 
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": required_env("CLOUDINARY_CLOUD_NAME"),

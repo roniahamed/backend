@@ -1,13 +1,12 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.db.models import F
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from apps.blog.models import BlogPost, Tag
 from apps.blog.serializers import BlogPostDetailSerializer, BlogPostListSerializer, TagSerializer
 
 
-@method_decorator(cache_page(60 * 5), name="dispatch")
 class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
 	permission_classes = [AllowAny]
 	lookup_field = "slug"
@@ -28,10 +27,19 @@ class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
 			"cover_image_url",
 			"published_at",
 			"reading_time_minutes",
+			"view_count",
 			"meta_description",
 			"author_id",
 		)
 	)
+
+	def retrieve(self, request, *args, **kwargs):
+		instance = self.get_object()
+		# why: F-expression increments safely under concurrent reads.
+		BlogPost.objects.filter(pk=instance.pk).update(view_count=F("view_count") + 1)
+		instance.refresh_from_db(fields=("view_count",))
+		serializer = self.get_serializer(instance)
+		return Response(serializer.data)
 
 	def get_serializer_class(self):
 		if self.action == "retrieve":

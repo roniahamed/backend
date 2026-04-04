@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 
@@ -9,6 +10,10 @@ class Service(models.Model):
 	icon_key = models.CharField(max_length=64)
 	features = models.JSONField(default=list)
 	tech_stack = models.JSONField(default=list)
+	challenges_vs_solutions = models.JSONField(default=list)
+	my_services = models.JSONField(default=list)
+	development_process = models.JSONField(default=list)
+	links = GenericRelation("core.Link", related_query_name="services")
 	sort_order = models.PositiveIntegerField(default=0)
 	is_active = models.BooleanField(default=True)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -41,6 +46,13 @@ class Project(models.Model):
 	role = models.CharField(max_length=60)
 	quote = models.TextField(blank=True)
 	problem_statement = models.TextField(blank=True)
+	challenges = models.JSONField(default=list)
+	solutions = models.JSONField(default=list)
+	feature_items = models.JSONField(default=list)
+	technical_architecture = models.JSONField(default=dict)
+	impact_metrics = models.JSONField(default=list)
+	is_open_source = models.BooleanField(default=False)
+	links = GenericRelation("core.Link", related_query_name="projects")
 	thumbnail_image_url = models.URLField(blank=True)
 	is_featured = models.BooleanField(default=False)
 	is_published = models.BooleanField(default=True)

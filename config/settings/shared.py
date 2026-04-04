@@ -3,6 +3,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.filters",
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -22,6 +25,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -35,7 +39,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -81,9 +85,35 @@ REST_FRAMEWORK = {
     },
 }
 
+CORS_ALLOWED_ORIGINS = []
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "Portfolio API",
     "DESCRIPTION": "Versioned backend API for the portfolio site.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+}
+
+UNFOLD = {
+    "SITE_TITLE": "Portfolio Admin",
+    "SITE_HEADER": "Portfolio Control Center",
+    "SITE_SYMBOL": "dashboard",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "DASHBOARD_CALLBACK": "apps.core.dashboard.dashboard_callback",
+    "COLORS": {
+        "primary": {
+            "50": "239 246 255",
+            "100": "219 234 254",
+            "200": "191 219 254",
+            "300": "147 197 253",
+            "400": "96 165 250",
+            "500": "59 130 246",
+            "600": "37 99 235",
+            "700": "29 78 216",
+            "800": "30 64 175",
+            "900": "30 58 138",
+            "950": "23 37 84",
+        }
+    },
 }
