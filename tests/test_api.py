@@ -110,6 +110,28 @@ def test_services_and_blog_endpoints_return_public_records(db):
     assert blog_response.data["results"][0]["slug"] == post.slug
 
 
+def test_blog_detail_increments_view_count(db):
+    author = build_user("blog-views@example.com")
+    post = BlogPost.objects.create(
+        slug="django-views",
+        title="Counting Blog Views",
+        excerpt="Track readers safely",
+        content="Long form content",
+        author=author,
+        status=BlogPost.STATUS_PUBLISHED,
+        published_at=timezone.now(),
+        view_count=0,
+    )
+
+    client = APIClient()
+    response = client.get(f"/api/v1/blog/posts/{post.slug}/")
+    post.refresh_from_db()
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["view_count"] == 1
+    assert post.view_count == 1
+
+
 def test_contact_submission_validates_message_and_jwt_token_works(db):
     user = build_user()
     client = APIClient()

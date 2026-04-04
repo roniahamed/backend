@@ -32,6 +32,7 @@ class BlogPost(models.Model):
 	author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="blog_posts")
 	tags = models.ManyToManyField(Tag, related_name="posts", blank=True)
 	reading_time_minutes = models.PositiveIntegerField(default=1)
+	view_count = models.IntegerField(default=0)
 	meta_description = models.CharField(max_length=180, blank=True)
 	published_at = models.DateTimeField(default=timezone.now)
 	created_at = models.DateTimeField(auto_now_add=True)

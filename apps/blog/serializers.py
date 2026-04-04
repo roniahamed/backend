@@ -22,6 +22,7 @@ class BlogPostListSerializer(serializers.ModelSerializer):
             "cover_image_url",
             "published_at",
             "reading_time_minutes",
+            "view_count",
             "tags",
         )
 
@@ -40,6 +41,7 @@ class BlogPostDetailSerializer(serializers.ModelSerializer):
             "cover_image_url",
             "published_at",
             "reading_time_minutes",
+            "view_count",
             "meta_description",
             "tags",
         )
