@@ -2,7 +2,8 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db import transaction
+from django.db import connection, transaction
+from django.db.utils import DatabaseError, OperationalError
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny
@@ -24,7 +25,20 @@ class HealthCheckView(APIView):
 	permission_classes = [AllowAny]
 
 	def get(self, request):
-		return Response({"status": "ok"})
+		db_state = "connected"
+		status_text = "ok"
+		status_code = 200
+
+		# why: A real query guarantees each health request validates DB connectivity.
+		try:
+			with connection.cursor() as cursor:
+				cursor.execute("SELECT 1")
+		except (OperationalError, DatabaseError):
+			db_state = "disconnected"
+			status_text = "degraded"
+			status_code = 503
+
+		return Response({"status": status_text, "database": db_state}, status=status_code)
 
 
 class ContactSubmissionCreateView(generics.CreateAPIView):

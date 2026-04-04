@@ -27,9 +27,10 @@ def test_health_endpoint_returns_ok(db):
 
     assert response.status_code == status.HTTP_200_OK
     assert response.data["status"] == "ok"
-    assert response.data == {"status": "ok"}
+    assert response.data["database"] == "connected"
     assert public_response.status_code == status.HTTP_200_OK
-    assert public_response.data == {"status": "ok"}
+    assert public_response.data["status"] == "ok"
+    assert public_response.data["database"] == "connected"
 
 
 def test_public_profile_endpoint_returns_latest_public_profile(db):
