@@ -39,6 +39,8 @@ Critical runtime values:
 - `CELERY_BROKER_URL=redis://redis:6379/0`
 - `CELERY_RESULT_BACKEND=redis://redis:6379/2`
 - `SENTRY_DSN=<dsn>`
+- `WEB_HOST_PORT=8004` (choose a unique free local port for this project)
+- `FLOWER_HOST_PORT=5555` (choose a unique free local port, optional)
 
 ## 3. Build and Launch
 
@@ -92,9 +94,11 @@ server {
 }
 ```
 
+If you set a different `WEB_HOST_PORT`, update `proxy_pass` accordingly.
+
 ## 5. Runtime Architecture
 
-- Host Nginx (ports `80/443`) receives all inbound traffic and proxies app requests to this stack on `127.0.0.1:8004`.
+- Host Nginx (ports `80/443`) receives all inbound traffic and proxies app requests to this stack on `127.0.0.1:${WEB_HOST_PORT}`.
 - `web` runs Gunicorn and only handles short-lived request logic.
 - `worker` handles email delivery, media optimization, and cache warming jobs.
 - `beat` schedules periodic jobs (cache warmup, analytics aggregation).

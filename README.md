@@ -85,11 +85,16 @@ Services:
 - `redis`: cache + broker + result backend
 - `worker`: Celery worker
 - `beat`: Celery scheduler
-- `flower`: Celery monitoring on `:5555`
+- `flower`: Celery monitoring on `127.0.0.1:${FLOWER_HOST_PORT:-5555}`
 
-This compose stack exposes the API only on `127.0.0.1:8004`.
+This compose stack exposes the API only on `127.0.0.1:${WEB_HOST_PORT:-8004}`.
 
-On a VPS running multiple sites, keep a single host-level Nginx bound to ports `80/443` and proxy `api.roniahamed.com` to `http://127.0.0.1:8004`.
+Recommended `.env` values on multi-project VPS hosts:
+
+- `WEB_HOST_PORT=8004` (set any free local port per project)
+- `FLOWER_HOST_PORT=5555` (set any free local port if Flower is used)
+
+On a VPS running multiple sites, keep a single host-level Nginx bound to ports `80/443` and proxy `api.roniahamed.com` to `http://127.0.0.1:${WEB_HOST_PORT:-8004}`.
 
 Startup behavior:
 
