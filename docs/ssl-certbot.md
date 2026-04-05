@@ -1,54 +1,42 @@
-# SSL Setup for api.roniahamed.com on Port 8004
+# SSL Setup for api.roniahamed.com (Host Nginx + Let's Encrypt)
 
-This stack serves HTTPS from Nginx TLS port 443 inside container, exposed as host port 8004, so it does not conflict with other projects using host ports 80/443.
+On a multi-project VPS, one host-level Nginx should own ports `80/443` for all domains.
+This Docker Compose stack does not bind `80/443`; it exposes the API on `127.0.0.1:8004`.
 
 Important:
-- Let's Encrypt HTTP-01 challenge does not validate directly on port 8004.
-- For this setup, use DNS-01 challenge (recommended).
+- `api.roniahamed.com` must point to this VPS (A/AAAA record).
+- Port `80` must be reachable for Let's Encrypt HTTP-01 validation.
 
 ## 1. Start stack
 
 ```bash
 cd /home/roni/Desktop/Portfolio/backend
-docker compose up -d web db redis worker beat nginx
+docker compose up -d
 ```
 
 Notes:
 - `cert-init` auto-creates a short-lived self-signed certificate if Let's Encrypt files are not present yet.
 - This keeps `nginx` from crashing on first boot.
 
-## 2. Issue certificate using DNS challenge
+## 2. Issue certificate on the VPS host
 
-Run this once and follow prompts to add TXT records:
+Use your existing host Nginx + Certbot.
 
-```bash
-cd /home/roni/Desktop/Portfolio/backend
-docker compose run --rm --profile ops certbot certonly \
-  --manual \
-  --preferred-challenges dns \
-  --email you@example.com \
-  --agree-tos \
-  --no-eff-email \
-  -d api.roniahamed.com
-```
+If you already have certbot installed, common options are:
 
-This stores certs in Docker volume mounted at `/etc/letsencrypt`.
-
-## 3. Reload Nginx after certificate is issued
-
-```bash
-cd /home/roni/Desktop/Portfolio/backend
-docker compose restart nginx
-```
+- Nginx plugin (recommended when available): `sudo certbot --nginx -d api.roniahamed.com`
+- Webroot: `sudo certbot certonly --webroot -w /var/www/html -d api.roniahamed.com`
 
 ## 4. Verify
 
 ```bash
-curl -vk https://api.roniahamed.com:8004/health/
+curl -vk https://api.roniahamed.com/health/
 ```
 
 ## 5. Renewal strategy
 
-Manual DNS challenge needs periodic renewal. Recommended alternatives:
-- Use DNS API plugin (Cloudflare/Route53) for automated renewals.
-- Keep a central reverse proxy on 80/443 and forward to this service on 8004.
+Certbot on the host typically installs an auto-renewal timer. Verify with:
+
+```bash
+sudo systemctl list-timers | grep certbot || true
+```
