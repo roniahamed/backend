@@ -84,7 +84,7 @@ services:
   nginx:
     image: nginx:1.27-alpine
     ports:
-      - "8004:443"
+      - "8004:80"
     depends_on:
       web:
         condition: service_started
