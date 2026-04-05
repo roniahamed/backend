@@ -86,6 +86,24 @@ Services:
 - `flower`: Celery monitoring on `:5555`
 - `nginx`: reverse proxy + static file serving on `:80`
 
+Startup behavior:
+
+- `web` runs migrations and `collectstatic` during boot.
+- `worker`, `beat`, and `flower` do not run Django management commands at startup.
+
+Manual management commands:
+
+- `docker compose run --rm -e RUN_MIGRATIONS=false -e COLLECT_STATIC=false web python manage.py makemigrations`
+- `docker compose run --rm -e RUN_MIGRATIONS=false -e COLLECT_STATIC=false web python manage.py migrate`
+
+External PostgreSQL mode (Neon, Supabase, RDS):
+
+- Set `DATABASE_URL` in `.env` to your external PostgreSQL URL.
+- Start app stack without local db service:
+	- `docker compose up -d web redis worker beat nginx`
+- Local PostgreSQL service is optional and only started when profile is enabled:
+	- `docker compose --profile local-db up -d db`
+
 ## Uptime Monitoring
 
 - Better Stack setup guide: `backend/docs/betterstack-monitoring.md`
