@@ -76,15 +76,20 @@ Run from backend folder:
 - `docker compose build`
 - `docker compose up -d`
 
+If Redis logs warn about `vm.overcommit_memory`, see `backend/docs/vps-docker-deploy.md`.
+
 Services:
 
 - `web`: Django + Gunicorn
-- `db`: PostgreSQL
+- `db`: PostgreSQL (optional; only starts with `--profile local-db`)
 - `redis`: cache + broker + result backend
 - `worker`: Celery worker
 - `beat`: Celery scheduler
 - `flower`: Celery monitoring on `:5555`
-- `nginx`: reverse proxy + static file serving on `:80`
+
+This compose stack exposes the API only on `127.0.0.1:8004`.
+
+On a VPS running multiple sites, keep a single host-level Nginx bound to ports `80/443` and proxy `api.roniahamed.com` to `http://127.0.0.1:8004`.
 
 Startup behavior:
 
@@ -99,8 +104,8 @@ Manual management commands:
 External PostgreSQL mode (Neon, Supabase, RDS):
 
 - Set `DATABASE_URL` in `.env` to your external PostgreSQL URL.
-- Start app stack without local db service:
-	- `docker compose up -d web redis worker beat nginx`
+- Start app stack (local `db` is not started by default):
+	- `docker compose up -d`
 - Local PostgreSQL service is optional and only started when profile is enabled:
 	- `docker compose --profile local-db up -d db`
 
