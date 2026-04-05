@@ -1,10 +1,13 @@
-from django.db.models import F
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from apps.blog.models import BlogPost, Tag
 from apps.blog.serializers import BlogPostDetailSerializer, BlogPostListSerializer, TagSerializer
+from apps.blog.services.blog_service import (
+	get_published_posts_queryset,
+	get_tags_queryset,
+	increment_post_view_count,
+)
 
 
 class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
@@ -13,30 +16,11 @@ class BlogPostViewSet(viewsets.ReadOnlyModelViewSet):
 	search_fields = ("title", "excerpt", "content", "tags__name")
 	filterset_fields = ("tags__slug",)
 	ordering_fields = ("published_at", "title")
-
-	queryset = (
-		BlogPost.objects.filter(status=BlogPost.STATUS_PUBLISHED)
-		.select_related("author")
-		.prefetch_related("tags")
-		.only(
-			"id",
-			"slug",
-			"title",
-			"excerpt",
-			"content",
-			"cover_image_url",
-			"published_at",
-			"reading_time_minutes",
-			"view_count",
-			"meta_description",
-			"author_id",
-		)
-	)
+	queryset = get_published_posts_queryset()
 
 	def retrieve(self, request, *args, **kwargs):
 		instance = self.get_object()
-		# why: F-expression increments safely under concurrent reads.
-		BlogPost.objects.filter(pk=instance.pk).update(view_count=F("view_count") + 1)
+		increment_post_view_count(post_id=instance.pk)
 		instance.refresh_from_db(fields=("view_count",))
 		serializer = self.get_serializer(instance)
 		return Response(serializer.data)
@@ -52,4 +36,4 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 	serializer_class = TagSerializer
 	pagination_class = None
 	lookup_field = "slug"
-	queryset = Tag.objects.all().order_by("name")
+	queryset = get_tags_queryset()

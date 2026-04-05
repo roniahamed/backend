@@ -31,3 +31,11 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": __import__("datetime").timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": __import__("datetime").timedelta(days=1),
 }
+
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
+UPLOAD_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024
+UPLOAD_ALLOWED_IMAGE_MIME_TYPES = ("image/jpeg", "image/png", "image/webp")
