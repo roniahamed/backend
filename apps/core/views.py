@@ -1,18 +1,21 @@
 import logging
 
-from django.conf import settings
-from django.core.mail import send_mail
-from django.db import connection, transaction
-from django.db.utils import DatabaseError, OperationalError
 from rest_framework import generics, viewsets
-from rest_framework.exceptions import APIException
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
-from apps.core.models import ContactSubmission, Link
-from apps.core.serializers import ContactSubmissionCreateSerializer, LinkSerializer
+from apps.core.models import ContactSubmission
+from apps.core.serializers import (
+	ContactSubmissionCreateSerializer,
+	LinkSerializer,
+	ProjectCoverUploadSerializer,
+)
+from apps.core.services.contact_service import create_submission_and_enqueue_email
+from apps.core.services.health_service import get_health_payload
+from apps.core.services.link_service import get_active_links_queryset
+from apps.portfolio.services.media_service import upload_project_cover_and_enqueue
 
 logger = logging.getLogger(__name__)
 
@@ -25,20 +28,8 @@ class HealthCheckView(APIView):
 	permission_classes = [AllowAny]
 
 	def get(self, request):
-		db_state = "connected"
-		status_text = "ok"
-		status_code = 200
-
-		# why: A real query guarantees each health request validates DB connectivity.
-		try:
-			with connection.cursor() as cursor:
-				cursor.execute("SELECT 1")
-		except (OperationalError, DatabaseError):
-			db_state = "disconnected"
-			status_text = "degraded"
-			status_code = 503
-
-		return Response({"status": status_text, "database": db_state}, status=status_code)
+		payload, status_code = get_health_payload()
+		return Response(payload, status=status_code)
 
 
 class ContactSubmissionCreateView(generics.CreateAPIView):
@@ -50,38 +41,34 @@ class ContactSubmissionCreateView(generics.CreateAPIView):
 	def create(self, request, *args, **kwargs):
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
-
 		try:
-			with transaction.atomic():
-				submission = serializer.save()
-				# why: Immediate SMTP send confirms lead intake without background queue.
-				recipient = settings.CONTACT_RECEIVER_EMAIL
-				sent = send_mail(
-					subject=f"[Portfolio Contact] {submission.service_interest or 'General Inquiry'}",
-					message=(
-						f"Name: {submission.name}\n"
-						f"Email: {submission.email}\n"
-						f"Company: {submission.company or 'N/A'}\n"
-						f"Service Interest: {submission.service_interest or 'N/A'}\n\n"
-						f"Message:\n{submission.message}"
-					),
-					from_email=settings.DEFAULT_FROM_EMAIL,
-					recipient_list=[recipient],
-					fail_silently=False,
-				)
-				if sent == 0:
-					raise APIException("Email delivery failed. Please try again.")
-		except Exception as exc:
-			logger.exception("Failed to process contact submission")
-			raise APIException("Unable to submit contact form at this time.") from exc
+			submission = create_submission_and_enqueue_email(validated_payload=serializer.validated_data)
+		except Exception:
+			logger.exception("Failed to create contact submission")
+			raise
 
-		return Response(serializer.data, status=201)
+		response_serializer = self.get_serializer(submission)
+		return Response(response_serializer.data, status=201)
 
 
 class LinkViewSet(viewsets.ReadOnlyModelViewSet):
 	permission_classes = [AllowAny]
 	serializer_class = LinkSerializer
-	queryset = Link.objects.filter(is_active=True).select_related("content_type")
+	queryset = get_active_links_queryset()
 	filterset_fields = ("category", "is_active", "content_type")
 	search_fields = ("name", "url", "icon")
 	ordering_fields = ("sort_order", "name", "id")
+
+
+class ProjectCoverUploadView(APIView):
+	permission_classes = [IsAuthenticated]
+
+	def post(self, request):
+		serializer = ProjectCoverUploadSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+
+		result = upload_project_cover_and_enqueue(
+			project_slug=serializer.validated_data["project_slug"],
+			image_file=serializer.validated_data["file"],
+		)
+		return Response(result, status=202)

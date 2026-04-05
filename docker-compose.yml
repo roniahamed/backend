@@ -1,0 +1,128 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "true"
+      COLLECT_STATIC: "true"
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - static_data:/app/staticfiles
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: ["celery", "-A", "config", "flower", "--port=5555"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "5555:5555"
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles:
+      - local-db
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8004:443"
+    depends_on:
+      web:
+        condition: service_started
+      cert-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_data:/var/www/static
+      - certbot_www:/var/www/certbot
+      - letsencrypt_data:/etc/letsencrypt
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot_www:/var/www/certbot
+      - letsencrypt_data:/etc/letsencrypt
+    profiles:
+      - ops
+
+  cert-init:
+    image: alpine:3.20
+    command:
+      - sh
+      - -ec
+      - >
+        apk add --no-cache openssl >/dev/null;
+        mkdir -p /etc/letsencrypt/live/api.roniahamed.com;
+        if [ ! -f /etc/letsencrypt/live/api.roniahamed.com/fullchain.pem ] || [ ! -f /etc/letsencrypt/live/api.roniahamed.com/privkey.pem ]; then
+          openssl req -x509 -nodes -newkey rsa:2048 -days 7 -subj '/CN=api.roniahamed.com' -keyout /etc/letsencrypt/live/api.roniahamed.com/privkey.pem -out /etc/letsencrypt/live/api.roniahamed.com/fullchain.pem;
+        fi;
+    volumes:
+      - letsencrypt_data:/etc/letsencrypt
+    restart: "no"
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_data:
+  certbot_www:
+  letsencrypt_data:

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.utils.html import strip_tags
 from rest_framework import serializers
 
 from apps.core.models import ContactSubmission, Link
@@ -43,10 +45,22 @@ class ContactSubmissionCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate_message(self, value: str) -> str:
-        cleaned = value.strip()
+        cleaned = strip_tags(value).strip()
         if len(cleaned) < 20:
             raise serializers.ValidationError("Message must be at least 20 characters.")
         return cleaned
+
+    def validate_name(self, value: str) -> str:
+        cleaned = strip_tags(value).strip()
+        if not cleaned:
+            raise serializers.ValidationError("Name is required.")
+        return cleaned
+
+    def validate_company(self, value: str) -> str:
+        return strip_tags(value).strip()
+
+    def validate_service_interest(self, value: str) -> str:
+        return strip_tags(value).strip()
 
     def validate(self, attrs):
         if not attrs.get("service_interest") and attrs.get("subject"):
@@ -56,3 +70,17 @@ class ContactSubmissionCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("subject", None)
         return super().create(validated_data)
+
+
+class ProjectCoverUploadSerializer(serializers.Serializer):
+    project_slug = serializers.SlugField(max_length=255)
+    file = serializers.ImageField()
+
+    def validate_file(self, value):
+        if value.size > settings.UPLOAD_MAX_FILE_SIZE_BYTES:
+            raise serializers.ValidationError("File exceeds allowed size.")
+
+        if value.content_type not in settings.UPLOAD_ALLOWED_IMAGE_MIME_TYPES:
+            raise serializers.ValidationError("Unsupported file type.")
+
+        return value

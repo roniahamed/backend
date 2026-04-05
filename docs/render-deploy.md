@@ -18,7 +18,7 @@ This runbook deploys the Django backend to Render and maps it to `api.roniahamed
      ```
    - Start Command:
      ```bash
-     gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+     gunicorn config.wsgi:application --bind
      ```
 
 ## 2. Set Environment Variables
