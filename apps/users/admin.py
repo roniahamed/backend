@@ -9,3 +9,5 @@ class UserAdmin(ModelAdmin):
 	list_display = ("id", "email", "full_name", "is_public_profile", "is_staff")
 	list_filter = ("is_public_profile", "is_staff", "is_active")
 	search_fields = ("id", "email", "full_name", "username")
+	ordering = ("-date_joined",)
+	list_per_page = 50

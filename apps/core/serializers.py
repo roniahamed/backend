@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.utils.html import strip_tags
 from rest_framework import serializers
 
@@ -24,7 +25,9 @@ class LinkSerializer(serializers.ModelSerializer):
         )
 
     def get_related_object_type(self, obj: Link) -> str | None:
-        return obj.content_type.model if obj.content_type_id else None
+        if not obj.content_type_id:
+            return None
+        return ContentType.objects.get_for_id(obj.content_type_id).model
 
     def get_related_object_id(self, obj: Link) -> int | None:
         return obj.object_id

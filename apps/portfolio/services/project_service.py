@@ -25,11 +25,33 @@ def get_public_services_queryset() -> QuerySet[Service]:
     )
 
 
-def get_public_projects_queryset() -> QuerySet[Project]:
-    # why: list and detail serializers both touch related images/metrics/links; prefetch stops N+1 explosions.
+def get_public_projects_list_queryset() -> QuerySet[Project]:
     return (
         Project.objects.filter(is_published=True)
         .annotate(image_count=Count("images", distinct=True))
+        .only(
+            "id",
+            "slug",
+            "title",
+            "subtitle",
+            "description",
+            "tech_stack",
+            "period",
+            "live_url",
+            "github_url",
+            "category",
+            "role",
+            "is_open_source",
+            "thumbnail_image_url",
+            "is_featured",
+        )
+        .order_by("-published_at", "title")
+    )
+
+
+def get_public_projects_detail_queryset() -> QuerySet[Project]:
+    return (
+        Project.objects.filter(is_published=True)
         .only(
             "id",
             "slug",
@@ -56,7 +78,6 @@ def get_public_projects_queryset() -> QuerySet[Project]:
             "is_open_source",
             "thumbnail_image_url",
             "is_featured",
-            "published_at",
         )
         .prefetch_related("images", "metrics", "links__content_type")
         .order_by("-published_at", "title")

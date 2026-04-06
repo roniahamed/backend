@@ -3,10 +3,27 @@ from django.db.models import F, QuerySet
 from apps.blog.models import BlogPost, Tag
 
 
-def get_published_posts_queryset() -> QuerySet[BlogPost]:
+def get_published_posts_list_queryset() -> QuerySet[BlogPost]:
     return (
         BlogPost.objects.filter(status=BlogPost.STATUS_PUBLISHED)
-        .select_related("author")
+        .prefetch_related("tags")
+        .only(
+            "id",
+            "slug",
+            "title",
+            "excerpt",
+            "cover_image_url",
+            "published_at",
+            "reading_time_minutes",
+            "view_count",
+        )
+        .order_by("-published_at")
+    )
+
+
+def get_published_posts_detail_queryset() -> QuerySet[BlogPost]:
+    return (
+        BlogPost.objects.filter(status=BlogPost.STATUS_PUBLISHED)
         .prefetch_related("tags")
         .only(
             "id",
@@ -19,7 +36,6 @@ def get_published_posts_queryset() -> QuerySet[BlogPost]:
             "reading_time_minutes",
             "view_count",
             "meta_description",
-            "author_id",
         )
         .order_by("-published_at")
     )

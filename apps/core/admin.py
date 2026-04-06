@@ -10,6 +10,9 @@ class ContactSubmissionAdmin(ModelAdmin):
 	list_filter = ("status", "created_at")
 	search_fields = ("id", "name", "email", "company", "service_interest", "message")
 	readonly_fields = ("created_at",)
+	date_hierarchy = "created_at"
+	ordering = ("-created_at",)
+	list_per_page = 50
 
 
 @admin.register(Link)
@@ -18,3 +21,5 @@ class LinkAdmin(ModelAdmin):
 	list_filter = ("category", "is_active", "content_type")
 	search_fields = ("id", "name", "url", "icon")
 	ordering = ("category", "sort_order", "name")
+	list_select_related = ("content_type",)
+	list_per_page = 100

@@ -22,6 +22,9 @@ class User(AbstractUser):
 
 	class Meta:
 		ordering = ("-date_joined",)
+		indexes = [
+			models.Index(fields=("is_public_profile", "-updated_at"), name="users_public_updated_idx"),
+		]
 
 	def __str__(self) -> str:
 		return self.full_name or self.email

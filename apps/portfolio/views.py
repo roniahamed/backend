@@ -9,7 +9,8 @@ from apps.portfolio.serializers import (
 	ServiceSerializer,
 )
 from apps.portfolio.services.project_service import (
-	get_public_projects_queryset,
+	get_public_projects_detail_queryset,
+	get_public_projects_list_queryset,
 	get_public_services_queryset,
 )
 
@@ -26,13 +27,19 @@ class ServiceViewSet(viewsets.ReadOnlyModelViewSet):
 	ordering_fields = ("sort_order", "title", "id")
 
 
+@method_decorator(cache_page(60 * 5), name="dispatch")
 class ProjectViewSet(viewsets.ReadOnlyModelViewSet):
 	permission_classes = [AllowAny]
 	lookup_field = "slug"
 	filterset_fields = ("category", "role", "is_featured", "is_open_source")
 	search_fields = ("title", "slug", "subtitle", "description", "abstract")
 	ordering_fields = ("published_at", "title", "id")
-	queryset = get_public_projects_queryset()
+	queryset = get_public_projects_list_queryset()
+
+	def get_queryset(self):
+		if self.action == "retrieve":
+			return get_public_projects_detail_queryset()
+		return get_public_projects_list_queryset()
 
 	def get_serializer_class(self):
 		if self.action == "retrieve":
