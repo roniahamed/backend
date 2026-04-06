@@ -87,9 +87,9 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ),
     "DEFAULT_THROTTLE_RATES": {
-        "contact_submission": "10/hour",
-        "anon": "120/hour",
-        "user": "600/hour",
+        "contact_submission": "20/minute",
+        "anon": "60/minute",
+        "user": "200/minute",
     },
 }
 
